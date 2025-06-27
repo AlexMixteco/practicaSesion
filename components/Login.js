@@ -1,96 +1,112 @@
-import React from 'react';
-import { Text, TextInput, View, ImageBackground, StyleSheet } from 'react-native';
-import { Icon, Button } from 'react-native-elements';
+import React, { useEffect } from 'react';
+import {
+  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
+import { Formik } from 'formik';
+import * as yup from 'yup';
+import { saveSession, getSession } from '../utils/sesiones'; 
 
-const imgbg = require('../assets/hamburger-895831_1280.jpg');
+// Esquema de validación con Yup
+const loginValidationSchema = yup.object().shape({
+  email: yup.string().email('Correo inválido').required('Requerido'),
+  password: yup.string().min(6, 'Mínimo 6 caracteres').required('Requerido'),
+});
 
-export default function LoginScreen({ navigation }) {
+export default function Login() {
+  const navigation = useNavigation();
+
+  // Verifica si ya hay sesión activa al abrir la app
+  useEffect(() => {
+    const checkSession = async () => {
+      const token = await getSession();
+      if (token) {
+        navigation.replace('Home'); // Redirige si ya hay sesión
+      }
+    };
+    checkSession();
+  }, []);
+
+  // Simula login y guarda sesión
+  const submit = async (values) => {
+    try {
+      const fakeToken = 'abc123'; // Simula token recibido de un backend
+
+      await saveSession(fakeToken); // Guarda token en AsyncStorage
+      Alert.alert('Login exitoso');
+      navigation.replace('Home'); // Redirige a pantalla principal
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo iniciar sesión');
+      console.error(error);
+    }
+  };
+
   return (
-    <ImageBackground source={imgbg} style={{ width: '100%', height: '100%' }}>
-      <View style={styles.container}>
-        <View style={styles.containerUserName}>
-          <Icon type="font-awesome" name="user" color="gray" containerStyle={styles.icon} />
-          <TextInput
-            placeholder="Username"
-            placeholderTextColor="gray"
-            style={styles.textInput}
-          />
-        </View>
+    <View style={styles.container}>
+      <Text style={styles.title}>Login</Text>
 
-        <View style={styles.containerPassword}>
-          <Icon type="entypo" name="key" color="gray" containerStyle={styles.icon} />
-          <TextInput
-            placeholder="Password"
-            placeholderTextColor="gray"
-            secureTextEntry={true}
-            style={styles.textInput}
-          />
-        </View>
+      <Formik
+        validationSchema={loginValidationSchema}
+        initialValues={{ email: 'alejandromixer17@gmail.com', password: '123456' }} // Valores por defecto
+        onSubmit={submit}
+      >
+        {({
+          handleChange, handleBlur, handleSubmit, values, errors, touched, isValid,
+        }) => (
+          <>
+            <View style={styles.inputContainer}>
+              <Icon name="mail-outline" size={25} style={styles.icon} />
+              <TextInput
+                placeholder="Email"
+                style={styles.input}
+                keyboardType="email-address"
+                onChangeText={handleChange('email')}
+                onBlur={handleBlur('email')}
+                value={values.email}
+              />
+            </View>
+            {errors.email && touched.email && <Text style={styles.error}>{errors.email}</Text>}
 
-        <View style={styles.containerSignIn}>
-          <Button
-            title="SIGN IN"
-            buttonStyle={{ backgroundColor: '#ffa100' }}
-            onPress={() => alert('Login Presionado')}
-          />
-        </View>
+            <View style={styles.inputContainer}>
+              <Icon name="lock-closed-outline" size={25} style={styles.icon} />
+              <TextInput
+                placeholder="Password"
+                secureTextEntry
+                style={styles.input}
+                onChangeText={handleChange('password')}
+                onBlur={handleBlur('password')}
+                value={values.password}
+              />
+            </View>
+            {errors.password && touched.password && <Text style={styles.error}>{errors.password}</Text>}
 
-        <View style={styles.containerRegister}>
-          <Text style={{ color: 'white', fontWeight: 'bold' }}>
-            Create an Account?
-            <Text
-              onPress={() => navigation.navigate('Register')}
-              style={{ color: 'red', fontWeight: 'bold' }}
-            >
-              {' '}
-              Register
-            </Text>
-          </Text>
-        </View>
-      </View>
-    </ImageBackground>
+            <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={!isValid}>
+              <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </Formik>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'stretch',
+    flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#fff',
   },
-  containerSignIn: {
-    height: 60,
-    marginHorizontal: '6%',
-    paddingTop: '2%',
+  title: {
+    fontSize: 32, marginBottom: 30, fontWeight: 'bold', color: 'black',
   },
-  containerUserName: {
-    height: 60,
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    marginHorizontal: '10%',
-    alignItems: 'center',
-    marginBottom: 10,
+  inputContainer: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f1f1',
+    borderRadius: 8, paddingHorizontal: 10, marginBottom: 15, width: '100%',
   },
-  containerPassword: {
-    height: 60,
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    marginHorizontal: '10%',
-    alignItems: 'center',
-    marginBottom: 10,
+  icon: { marginRight: 10 },
+  input: { flex: 1, height: 50 },
+  button: {
+    backgroundColor: '#1E90FF', padding: 15, borderRadius: 8, width: '100%', alignItems: 'center',
   },
-  containerRegister: {
-    height: 60,
-    marginHorizontal: '6%',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  icon: {
-    paddingLeft: 10,
-    paddingRight: 10,
-  },
-  textInput: {
-    flex: 1,
-    color: 'black',
-  },
+  buttonText: { color: '#fff', fontSize: 18 },
+  error: { color: 'red', alignSelf: 'flex-start', marginBottom: 10 },
 });
