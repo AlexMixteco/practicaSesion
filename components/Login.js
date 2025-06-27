@@ -8,7 +8,7 @@ import { Formik } from 'formik';
 import * as yup from 'yup';
 import { saveSession, getSession } from '../utils/sesiones'; 
 
-// Esquema de validación con Yup
+// Validación con Yup
 const loginValidationSchema = yup.object().shape({
   email: yup.string().email('Correo inválido').required('Requerido'),
   password: yup.string().min(6, 'Mínimo 6 caracteres').required('Requerido'),
@@ -17,25 +17,24 @@ const loginValidationSchema = yup.object().shape({
 export default function Login() {
   const navigation = useNavigation();
 
-  // Verifica si ya hay sesión activa al abrir la app
   useEffect(() => {
     const checkSession = async () => {
       const token = await getSession();
       if (token) {
-        navigation.replace('Home'); // Redirige si ya hay sesión
+        navigation.replace('Home'); 
       }
     };
     checkSession();
   }, []);
 
-  // Simula login y guarda sesión
+  
   const submit = async (values) => {
     try {
-      const fakeToken = 'abc123'; // Simula token recibido de un backend
+      const fakeToken = 'abc123'; 
 
-      await saveSession(fakeToken); // Guarda token en AsyncStorage
+      await saveSession(fakeToken); 
       Alert.alert('Login exitoso');
-      navigation.replace('Home'); // Redirige a pantalla principal
+      navigation.replace('Home'); 
     } catch (error) {
       Alert.alert('Error', 'No se pudo iniciar sesión');
       console.error(error);
@@ -48,8 +47,8 @@ export default function Login() {
 
       <Formik
         validationSchema={loginValidationSchema}
-        initialValues={{ email: 'alejandromixer17@gmail.com', password: '123456' }} // Valores por defecto
-        onSubmit={submit}
+        initialValues={{ email: 'alejandromixer17@gmail.com', password: '123456' }}
+        onSubmit={submit} 
       >
         {({
           handleChange, handleBlur, handleSubmit, values, errors, touched, isValid,
@@ -81,7 +80,11 @@ export default function Login() {
             </View>
             {errors.password && touched.password && <Text style={styles.error}>{errors.password}</Text>}
 
-            <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={!isValid}>
+            <TouchableOpacity
+              style={[styles.button, !isValid && { backgroundColor: '#999' }]}
+              onPress={handleSubmit}
+              disabled={!isValid}
+            >
               <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
           </>
